@@ -9,7 +9,7 @@ func routes(_ app: Application) throws {
         return "Hello, world!"
     }
     
-    app.post("test") { req -> EventLoopFuture<Todo> in
+    app.post("todo") { req -> EventLoopFuture<Todo> in
         let exist = try req.content.decode(Todo.self)
         
         return exist.create(on: req.db).map { (result) -> Todo in
@@ -17,9 +17,36 @@ func routes(_ app: Application) throws {
         }
     }
 
-    app.get("testAll") { req -> EventLoopFuture<[Todo]> in
-        return Todo.query(on: req.db).all()
+    app.get("todos") { req -> EventLoopFuture<[Todo]> in
+        Todo.query(on: req.db).all()
     }
     
-    try app.register(collection: TodoController())
+    app.get("todos", ":todoID") { req -> EventLoopFuture<Todo> in
+        Todo.find(req.parameters.get("todoID"), on: req.db).unwrap(or: Abort(.notFound))
+    }
+    
+    app.patch("todos", ":todoID") { req -> EventLoopFuture<Todo> in
+        let updatedTodo = try req.content.decode(Todo.self)
+        return Todo.find(req.parameters.get("todoID"), on: req.db)
+            .unwrap(or: Abort(.notFound)).flatMap { todo in
+                todo.title = updatedTodo.title
+                todo.description = updatedTodo.description
+                todo.deadline = updatedTodo.deadline
+                todo.status = updatedTodo.status
+                
+                return todo.save(on: req.db).map {
+                    todo
+                }
+            }
+    }
+    
+    app.delete("todos", ":todoID") { req -> EventLoopFuture<HTTPStatus> in
+        Todo.find(req.parameters.get("todoID"), on: req.db)
+            .unwrap(or: Abort(.notFound))
+            .flatMap { todo in
+                todo.delete(on: req.db).transform(to: .noContent)
+            }
+    }
+    
+    //try app.register(collection: TodoController())
 }
