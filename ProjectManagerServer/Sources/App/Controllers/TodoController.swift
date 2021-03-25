@@ -10,7 +10,7 @@ import Vapor
 
 struct TodoController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
-        routes.post("todo", use: createHandler)
+        routes.post("todos", use: createHandler)
         routes.get("todos", use: getAllHandler)
         routes.get("todos", ":todoID", use: getHandler)
         routes.patch("todos", ":todoID", use: updateHandler)
