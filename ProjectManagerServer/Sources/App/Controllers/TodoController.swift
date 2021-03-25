@@ -10,11 +10,12 @@ import Vapor
 
 struct TodoController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
-        routes.post("todos", use: createHandler)
-        routes.get("todos", use: getAllHandler)
-        routes.get("todos", ":todoID", use: getHandler)
-        routes.patch("todos", ":todoID", use: updateHandler)
-        routes.delete("todos", ":todoID", use: deleteHandler)
+        let todoRoutes = routes.grouped("todos")
+        todoRoutes.post(use: createHandler)
+        todoRoutes.get(use: getAllHandler)
+        todoRoutes.get(":todoID", use: getHandler)
+        todoRoutes.patch(":todoID", use: updateHandler)
+        todoRoutes.delete(":todoID", use: deleteHandler)
     }
     
     func createHandler(_ req: Request) throws -> EventLoopFuture<Todo> {
